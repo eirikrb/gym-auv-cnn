@@ -236,7 +236,7 @@ def play_scenario(env, recorded_env, args, agent=None):
                         env.save_latest_episode(save_history=False)
                         for size in (100, 200):#, 300, 400, 500):
                             gym_auv.reporting.plot_trajectory(
-                                figure_folder, env, fig_dir='logs/play_results/', fig_prefix=('_t_step_' + str(t_steps) + '_' + str(size)), local=True, size=size
+                                "figures", env, fig_dir='logs/play_results/', fig_prefix=('_t_step_' + str(t_steps) + '_' + str(size)), local=True, size=size
                             )
 
                 if quit: raise KeyboardInterrupt

@@ -37,5 +37,7 @@ export LD_LIBRARY_PATH="<absolute_acados_root>/lib"
 export ACADOS_SOURCE_DIR="<absolute_acados_root>"
 ```
 
+Download tera renderer executable from https://github.com/acados/tera_renderer/releases and place them in <acados_root>/bin (please strip the version and platform from the binaries (e.g.t_renderer-v0.0.34 -> t_renderer). Notice that you might need to make t_renderer executable by right clicking on the file -> Properties -> Permissions -> Allow executing file as program.
+
 #### Misc fixes:
 - Updated SB3 from 1.1.0 -> 1.8.0: Change ```run.py (line 451)```: ```agent = PPO("MlpPolicy", ...``` to ```agent = PPO("MultiInputPolicy", ...```
