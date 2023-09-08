@@ -1,6 +1,6 @@
 .gitignore
 SB3/
-env/*
+gym_auv_cnn_env/*
 c_generated_code/*
 acados_ocp/*
 !acados_ocp/.gitkeep

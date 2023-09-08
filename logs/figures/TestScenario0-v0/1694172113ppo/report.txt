@@ -1,0 +1,14 @@
+Episodes                      374                           
+Avg. Reward                   105.36                        
+Std. Reward                   284.32                        
+Goals reached                 370                           
+Avg. Progress                 98.20%                        
+Avg. Collisions               0.00                          
+No Collisions                 100.00%                       
+Avg. Cross-Track Error        13.55                         
+Avg. Timesteps                291.11                        
+Avg. Duration                 291.11                        
+Avg. Pathlength               100.00                        
+Avg. Speed                    0.37                          
+Max. Speed                    0.44                          
+Infeasible Solutions          0                             
