@@ -1,5 +1,5 @@
 absl-py==1.4.0
--e git+https://github.com/acados/acados.git@9622cfdebdb06a91a4a65bf4fe42adf2a8f16152#egg=acados_template&subdirectory=interfaces/acados_template
+# -e git+https://github.com/acados/acados.git@9622cfdebdb06a91a4a65bf4fe42adf2a8f16152#egg=acados_template&subdirectory=interfaces/acados_template
 blosc2==2.0.0
 cachetools==5.3.1
 casadi==3.6.3
