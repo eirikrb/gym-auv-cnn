@@ -1,4 +1,4 @@
-# gym-auv-SB3
+# gym-auv-CNN
 
 ## Installation
 Tested in Ubuntu 22.04.
