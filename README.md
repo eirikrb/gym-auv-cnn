@@ -20,8 +20,10 @@ make install -j4
 ```
 #### Set Acados environment variables
 ```
-export LD_LIBRARY_PATH="<absolute_acados_root>/lib"
+export LD_LIBRARY_PATH="<absolute_acados_root>/lib" (Broken???)
 export ACADOS_SOURCE_DIR="<absolute_acados_root>"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/acados/lib/
+
 ```
 ### Create virtual environment (pip)
 ```
