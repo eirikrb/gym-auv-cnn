@@ -18,6 +18,7 @@ from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.vec_env import VecVideoRecorder, DummyVecEnv, SubprocVecEnv, VecFrameStack
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
 from stable_baselines3 import PPO, DDPG, TD3, A2C, SAC
+from sb3_contrib import RecurrentPPO
 from sklearn.model_selection import ParameterGrid
 from shapely import speedups
 
@@ -289,6 +290,7 @@ def main(args):
     EXPERIMENT_ID = str(int(time())) + args.algo.lower()
     model = {
         'ppo': PPO,
+        'recurrent_ppo': RecurrentPPO,
         'ddpg': DDPG,
         'td3': TD3,
         'a2c': A2C,
@@ -343,13 +345,15 @@ def main(args):
         t_steps = 0
         ep_number = 1
         done = [False for _ in range(vec_env.num_envs)]
+        episode_starts = np.ones((vec_env.num_envs,), dtype=bool) # Episode start signals are used to reset the lstm states
         for _ in range(args.recording_length):
             if args.recurrent:
-                action, _states = agent.predict(observation=obs, state=state, mask=done, deterministic=not args.stochastic)
-                state = _states
+                action, _lstm_states = agent.predict(observation=obs, state=state, episode_start=episode_starts, mask=done, deterministic=not args.stochastic)
+                state = _lstm_states
             else:
                 action, _states = agent.predict(obs, deterministic=not args.stochastic)
             obs, reward, done, info = recorded_env.step(action)
+            episode_starts = done
             recorded_env.render()
             t_steps += 1
             
@@ -380,8 +384,13 @@ def main(args):
             vec_env = DummyVecEnv([lambda: create_env(env_id, envconfig, pilot=args.pilot)])
         else:
             num_cpu = NUM_CPU
-            vec_env = SubprocVecEnv([make_mp_env(env_id, i, envconfig, pilot=args.pilot) for i in range(num_cpu)])
-            #vec_env = VecFrameStack(_vec_env, n_stack=1, channels_order='first')
+            _vec_env = SubprocVecEnv([make_mp_env(env_id, i, envconfig, pilot=args.pilot) for i in range(num_cpu)])
+            if args.recurrent:
+                vec_env = VecFrameStack(_vec_env, n_stack=4, channels_order='first') 
+            else:
+                vec_env = _vec_env
+            
+            #vec_env = VecFrameStack(_vec_env, n_stack=1, channels_order='first')#OLD ATTEMPT AT FRAMESTACK
 
         if (args.agent is not None):
             agent = model.load(args.agent)
@@ -391,6 +400,8 @@ def main(args):
         else:
             if (model == PPO):
                 if args.recurrent:
+                    model = RecurrentPPO
+                    """ hyperparametere for gamle recurrent ppo med framestack og custom policy:
                     hyperparams = {
                         # 'n_steps': 1024,
                         # 'nminibatches': 32,
@@ -407,17 +418,50 @@ def main(args):
                         'noptepochs': 4,
                         'ent_coef': 0.01,
                         'learning_rate': 2e-3,
+                    }"""
+                    hyperparams = {
+                        # 'n_steps': 1024,
+                        # 'nminibatches': 32,
+                        # 'lam': 0.95,
+                        # 'gamma': 0.99,
+                        # 'noptepochs': 10,
+                        # 'ent_coef': 0.0,
+                        # 'learning_rate': 0.0003,
+                        # 'cliprange': 0.2,
+                        'n_steps': 1024,       # Default 128
+                        'batch_size': 32,      # Default 4
+                        'gae_lambda': 0.98,    # Default 0.95
+                        'gamma': 0.999,        # Default 0.99
+                        'n_epochs': 4,         # Default 4
+                        'ent_coef': 0.01,      # Default 0.01
+                        'learning_rate': 2e-4, # Default 2.5e-4
                     }
+                    """#OLD USED TO CREATE LSTM POLICY
                     class CustomLSTMPolicy(MlpLstmPolicy):
                         def __init__(self, sess, ob_space, ac_space, n_env, n_steps, n_batch, n_lstm=256, reuse=False, **_kwargs):
                             super().__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, n_lstm, reuse,
                             net_arch=[256, 256, 'lstm', dict(vf=[64], pi=[64])],
                             **_kwargs)
-
-                    agent = PPO(CustomLSTMPolicy,
-                        vec_env, verbose=True, tensorboard_log=tensorboard_log, 
-                        **hyperparams
+                    """
+                    policy_kwargs = dict(
+                        features_extractor_class = PerceptionNavigationExtractor,
+                        features_extractor_kwargs = dict(features_dim=12),
+                        #net_arch = [128, 64, dict(pi=[32]), dict(vf=[32])]
+                        #net_arch=[dict(pi=[64, 64], vf=[64, 64])]
+                        net_arch=[dict(pi=[128, 64, 32], vf=[128, 64, 32])]
                     )
+                    """ #TRY RECURRENT PPO WITH BASIC PARAMETERS
+                    agent = RecurrentPPO("MultiInputLstmPolicy",
+                        vec_env, verbose=True, tensorboard_log=tensorboard_log, 
+                        **hyperparams, policy_kwargs=policy_kwargs
+                    )
+                    """
+                    # TRY FRAMESTACK SET ABOVE MODEL TYPE CHECK
+                    agent = PPO("MultiInputPolicy",
+                        vec_env, verbose=True, tensorboard_log=tensorboard_log, 
+                        **hyperparams, policy_kwargs=policy_kwargs
+                    )
+                    
                 else:
                     hyperparams = {
                         # 'n_steps': 1024,
@@ -448,7 +492,7 @@ def main(args):
                         #net_arch=[dict(pi=[64, 64], vf=[64, 64])]
                         net_arch=[dict(pi=[128, 64, 32], vf=[128, 64, 32])]
                     )
-                    agent = PPO("MlpPolicy",
+                    agent = PPO("MultiInputPolicy",
                         vec_env, verbose=True, tensorboard_log=tensorboard_log, 
                         **hyperparams, policy_kwargs=policy_kwargs
                     )
@@ -717,8 +761,13 @@ def main(args):
                     # Tensorboard logging
                     #self.vec_env.env_method('store_statistics_to_file', path=figure_folder)
 
-                    # Fetch stats from history attribute and log to tensorboard
-                    stats = np.array(self.vec_env.get_attr("history"))[done_array]
+                    # Check type, MultiInputPolicy for newest SB3 update created issues
+                    if type(np.array(self.vec_env.get_attr("history"))[done_array][0]) == dict:
+                        stats = np.array(self.vec_env.get_attr("history"))[done_array]
+                    else:
+                        stats = np.array(self.vec_env.get_attr("history"))[done_array][0]
+                    
+                    # Fetch stats from history attribute and log to tensorboard   
                     for _env in stats:
                         for stat in _env.keys():
                             #self.logger.record('stats/'+stat, _env[stat])

@@ -171,16 +171,16 @@ if __name__ == '__main__':
     def load_net():
         from . import gym_auv
         algo = PPO
-        #path = "radarCNN_example_Network.pkl"
-        path = "../../radarCNN_example_Network150000.pkl"
+        path = "radarCNN_example_Network.pkl"
+        #path = "../../radarCNN_example_Network150000.pkl"
         #path = "PPO_MlpPolicy_trained.pkl"
         #model = th.load(path)  # RunTimeError: : [enforce fail at ..\caffe2\serialize\inline_container.cc:114] . file in archive is not in a subdirectory: data
         #model = MlpPolicy.load(path)
         model = algo.load(path)
 
 
-    load_net()
-    print("loaded net")
+    #load_net()
+    #print("loaded net")
     exit()
     ## Initialize convolutional layers (circular padding in all layers or just the first?)
     # First layer retains spatial structure,
