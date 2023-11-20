@@ -18,7 +18,8 @@ class RadarCNN(BaseFeaturesExtractor):
         super(RadarCNN, self).__init__(observation_space, features_dim=features_dim)
         # We assume CxHxW images (channels first)
         # Re-ordering will be done by pre-preprocessing or wrapper
-
+        
+        #"""
         # Adjust kernel size for sensor density. (Default 180 sensors with 0.05 overlap --> kernel covers 9 sensors.
         self.in_channels = observation_space.shape[0]  # 180
         self.kernel_size = round(sensor_dim * kernel_overlap)  # 45
@@ -37,8 +38,34 @@ class RadarCNN(BaseFeaturesExtractor):
                       padding_mode='circular', stride=self.stride),
             nn.Flatten(),
         )
+        """
 
-        # Compute shape by doing one forward pass
+        # TRY FRAMESTACKING WITH 3CONV DEEP NETWORK:
+
+        # Adjust kernel size for sensor density. (Default 180 sensors with 0.05 overlap --> kernel covers 9 sensors.
+        self.in_channels = observation_space.shape[0]  # 180
+        self.kernel_size = round(sensor_dim * kernel_overlap)  # 45
+        self.kernel_size = self.kernel_size + 1 if self.kernel_size % 2 == 0 else self.kernel_size  # Make it odd sized
+        #self.padding = (self.kernel_size - 1) // 2  # 22
+        self.padding = self.kernel_size // 3  # 15
+        self.stride = self.padding
+        #print("RADAR_CNN CONFIG")
+        #print("\tIN_CHANNELS =", self.in_channels)
+        #print("\tKERNEL_SIZE =", self.kernel_size)
+        #print("\tPADDING     =", self.padding)
+        #print("\tSTRIDE      =", self.stride)
+        self.cnn = nn.Sequential(
+            # in_channels: sensor distance, obst_velocity_x, obst_velocity_y
+            nn.Conv1d(in_channels=self.in_channels, out_channels=2, kernel_size=self.kernel_size, padding=self.padding,
+                      padding_mode='circular', stride=self.stride),
+            #nn.Conv1d(in_channels=3, out_channels=2, kernel_size=3, padding=1, padding_mode='circular', stride=1),
+            nn.Conv1d(in_channels=2, out_channels=1, kernel_size=3, padding=1, padding_mode='circular', stride=1),
+            nn.Flatten(),
+        )
+        """
+        
+        
+        # Compute shape by doing one forward pass   
         self.n_flatten = 0
         sample = th.as_tensor(observation_space.sample()).float()
         print("Observation space - sample shape:", sample.shape)
@@ -97,6 +124,64 @@ class NavigatioNN(BaseFeaturesExtractor):
         observations = observations[:,0,:].reshape(shape[0], shape[-1])
         return self.passthrough(observations)
 
+
+class PerceptionNavigationExtractor(BaseFeaturesExtractor):
+    """
+    :param observation_space: (gym.Space) of dimension (1, 3, N_sensors)
+    :param features_dim: (int) Number of features extracted.
+        This corresponds to the number of unit for the last layer.
+    """
+
+    #def __init__(self, observation_space: gym.spaces.Dict, sensor_dim : int = 180, features_dim: int = 32, kernel_overlap : float = 0.05):
+    def __init__(self, observation_space: gym.spaces.Dict, sensor_dim: int = 180, features_dim: int = 12, kernel_overlap: float = 0.25):
+        # We do not know features-dim here before going over all the items,
+        # so put something dummy for now. PyTorch requires calling
+        # nn.Module.__init__ before adding modules
+        super(PerceptionNavigationExtractor, self).__init__(observation_space, features_dim=1)
+        # We assume CxHxW images (channels first)
+        # Re-ordering will be done by pre-preprocessing or wrapper
+
+        extractors = {}
+
+        total_concat_size = 0
+        # We need to know size of the output of this extractor,
+        # so go over all the spaces and compute output feature sizes
+        for key, subspace in observation_space.spaces.items():
+            if key == "perception":
+                # Pass sensor readings through CNN
+                extractors[key] = RadarCNN(subspace, sensor_dim=sensor_dim, features_dim=features_dim, kernel_overlap=kernel_overlap)
+                total_concat_size += features_dim  # extractors[key].n_flatten
+            elif key == "navigation":
+                # Pass navigation features straight through to the MlpPolicy.
+                extractors[key] = NavigatioNN(subspace, features_dim=subspace.shape[-1]) #nn.Identity()
+                total_concat_size += subspace.shape[-1]
+
+        self.extractors = nn.ModuleDict(extractors)
+
+        # Update the features dim manually
+        self._features_dim = total_concat_size
+
+    def forward(self, observations) -> th.Tensor:
+        encoded_tensor_list = []
+
+        # self.extractors contain nn.Modules that do all the processing.
+        for key, extractor in self.extractors.items():
+            print(f'key: {key}')
+            print('observations[key]:')
+            print(observations[key].shape)
+            print('extractor(observations[key]):')
+            print(extractor(observations[key]).shape)
+            encoded_tensor_list.append(extractor(observations[key]))
+        # Return a (B, self._features_dim) PyTorch tensor, where B is batch dimension.
+        return th.cat(encoded_tensor_list, dim=1)
+
+
+
+
+
+
+
+'''
 class PerceptionNavigationExtractor(BaseFeaturesExtractor):
     """
     :param observation_space: (gym.Space) of dimension (1, 3, N_sensors)
@@ -141,7 +226,7 @@ class PerceptionNavigationExtractor(BaseFeaturesExtractor):
             encoded_tensor_list.append(extractor(observations[key]))
         # Return a (B, self._features_dim) PyTorch tensor, where B is batch dimension.
         return th.cat(encoded_tensor_list, dim=1)
-
+'''
 
 if __name__ == '__main__':
     import numpy as np
@@ -171,16 +256,16 @@ if __name__ == '__main__':
     def load_net():
         from . import gym_auv
         algo = PPO
-        #path = "radarCNN_example_Network.pkl"
-        path = "../../radarCNN_example_Network150000.pkl"
+        path = "radarCNN_example_Network.pkl"
+        #path = "../../radarCNN_example_Network150000.pkl"
         #path = "PPO_MlpPolicy_trained.pkl"
         #model = th.load(path)  # RunTimeError: : [enforce fail at ..\caffe2\serialize\inline_container.cc:114] . file in archive is not in a subdirectory: data
         #model = MlpPolicy.load(path)
         model = algo.load(path)
 
 
-    load_net()
-    print("loaded net")
+    #load_net() # if not, cnn net is randomly initialized
+    #print("loaded net")
     exit()
     ## Initialize convolutional layers (circular padding in all layers or just the first?)
     # First layer retains spatial structure,

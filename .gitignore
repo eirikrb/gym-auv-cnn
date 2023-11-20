@@ -1,5 +1,11 @@
+# Repo specific:
+plots/*
+tests/*
+models/*
+logs/*
 .gitignore
 SB3/
+data/*
 gym_auv_cnn_env/*
 c_generated_code/*
 acados_ocp/*
@@ -11,3 +17,60 @@ logs/play_results/report.txt
 *.json
 *.pkl
 resources/*
+
+
+# Default stuff:
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Rope
+.ropeproject
+
+# Django stuff:
+*.log
+*.pot
+
+# Sphinx documentation
+docs/_build/
