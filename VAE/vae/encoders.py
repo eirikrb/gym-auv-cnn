@@ -48,14 +48,21 @@ class Encoder_conv_shallow(BaseEncoder):
                  latent_dims:int=12,
                  n_sensors:int=180, 
                  kernel_overlap:float=0.25,
+                 kernel_size=None,
                  eps_weight:float=1):  
         super().__init__()
 
         self.name = 'conv_shallow'
         self.latent_dims = latent_dims
-        self.in_channels = 1 
-        self.kernel_size = round(n_sensors * kernel_overlap)  # 45
-        self.kernel_size = self.kernel_size + 1 if self.kernel_size % 2 == 0 else self.kernel_size  # Make it odd sized
+        self.in_channels = 1
+
+        # Make kernel size adaptable for different sized output from conv-block
+        if kernel_size is None:
+            self.kernel_size = round(n_sensors * kernel_overlap)  # 45
+            self.kernel_size = self.kernel_size + 1 if self.kernel_size % 2 == 0 else self.kernel_size  # Make it odd sized
+        else:
+            self.kernel_size = kernel_size
+
         # self.padding = (self.kernel_size - 1) // 2  # 22
         self.padding = self.kernel_size // 3  # 15
         self.stride = self.padding
@@ -74,19 +81,11 @@ class Encoder_conv_shallow(BaseEncoder):
             #nn.Flatten()
         )
         
-        len_flat = 12 # bc. of combination of input dim, kernel, stride and padding. TODO: Automate.
-        #self.linear = nn.Sequential(nn.Linear(len_flat, self.latent_dims), nn.ReLU()) # trenger kanskje ikke denne eller????, bare smell på en reul på mu og sigma
+        len_flat = int((n_sensors - self.kernel_size + 2*self.padding) // self.stride + 1) # D_out = ((D_in - kernel_size + 2*padding) / stride) + 1 
 
-        # TEST MED FC LAYER
+        #len_flat = 12 # bc. of combination of input dim, kernel, stride and padding. TODO: Automate.
 
-        """self.fc = nn.Sequential(
-            nn.Linear(len_flat, 32),
-            nn.ReLU(),
-            nn.Linear(32,len_flat),
-            nn.ReLU()
-        ) """# dobbeltsjekk om denne delen her skal være som dette!!
-
-        self.fc_mu = nn.Sequential(nn.Linear(len_flat, self.latent_dims), nn.ReLU()) # dobbeltsjekk om denne delen her skal være som dette!!
+        self.fc_mu = nn.Sequential(nn.Linear(len_flat, self.latent_dims), nn.ReLU()) # 
         self.fc_logvar = nn.Sequential(nn.Linear(len_flat, self.latent_dims), nn.ReLU()) 
 
     def forward(self, x):

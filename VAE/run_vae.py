@@ -7,7 +7,7 @@ from vae.VAE import VAE
 from vae.encoders import Encoder_conv_shallow, Encoder_conv_deep
 from vae.decoders import Decoder_circular_conv_shallow2, Decoder_circular_conv_deep
 from utils_vae.dataloader import load_LiDARDataset, concat_csvs
-from VAE.utils_vae.plotting_vae import *
+from utils_vae.plotting_vae import *
 from trainer import Trainer
 from tester import Tester
 import numpy as np
@@ -63,7 +63,7 @@ def main(args):
     if args.mode == 'train':
         # Set global model name 
         name = args.model_name
-        model_name_ = f'{name}_latent_dims_{LATENT_DIMS}'
+        model_name_ = f'{name}_latent_dims_{LATENT_DIMS}_beta_{BETA}'
 
         # Create Variational Autoencoder(s)
         if args.model_name == 'ShallowConvVAE':
@@ -492,7 +492,8 @@ if __name__ == '__main__':
                         help= 'Plotting mode',
                         type=str,
                         choices=['reconstructions', 'loss', 'separated_losses', 'latent_dims_sweep', 'latent_distributions', 'test_loss_report', 'eps_weight_sweep', 'latent_dist_kde'],
-                        nargs='+'
+                        nargs='+',
+                        default = ['separated_losses']
     )
     parser.add_argument('--save_model',
                         help= 'Save model',

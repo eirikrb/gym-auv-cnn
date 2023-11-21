@@ -57,18 +57,25 @@ class Decoder_conv_shallow(BaseDecoder):
     def __init__(self, 
                  latent_dims:int=12,
                  n_sensors:int=180, 
-                 kernel_overlap = 0.25):  
+                 kernel_overlap = 0.25,
+                 kernel_size=None):  
         super().__init__()
         self.latent_dims = latent_dims
         self.in_channels = 1 
         self.out_channels = 1
-        self.kernel_size = round(n_sensors * kernel_overlap)  # 45
-        self.kernel_size = self.kernel_size + 1 if self.kernel_size % 2 == 0 else self.kernel_size  # Make it odd sized
+        if kernel_size is None:
+            self.kernel_size = round(n_sensors * kernel_overlap)  # 45
+            self.kernel_size = self.kernel_size + 1 if self.kernel_size % 2 == 0 else self.kernel_size  # Make it odd sized
+        else:
+            self.kernel_size = kernel_size
+
         # self.padding = (self.kernel_size - 1) // 2  # 22
         self.padding = self.kernel_size // 3  # 15
         self.stride = self.padding
 
-        len_flat = 12 # bc. of combination of input dim, kernel, stride and padding. TODO: Automate.
+
+        len_flat = int((n_sensors - self.kernel_size + 2*self.padding) // self.stride + 1) # D_out = ((D_in - kernel_size + 2*padding) / stride) + 1 
+        #len_flat = 12 # bc. of combination of input dim, kernel, stride and padding. TODO: Automate.
 
         self.linear = nn.Sequential(
             nn.Linear(self.latent_dims, len_flat), 
@@ -102,18 +109,24 @@ class Decoder_circular_conv_shallow2(BaseDecoder):
     def __init__(self,
                  latent_dims: int = 12,
                  n_sensors: int = 180,
-                 kernel_overlap=0.25):
+                 kernel_overlap=0.25,
+                 kernel_size=None):
         super().__init__()
         self.latent_dims = latent_dims
         self.in_channels = 1
         self.out_channels = 1
-        self.kernel_size = round(n_sensors * kernel_overlap)  # 45
-        self.kernel_size = self.kernel_size + 1 if self.kernel_size % 2 == 0 else self.kernel_size  # Make it odd sized
+        if kernel_size is None:
+            self.kernel_size = round(n_sensors * kernel_overlap)  # 45
+            self.kernel_size = self.kernel_size + 1 if self.kernel_size % 2 == 0 else self.kernel_size  # Make it odd sized
+        else:
+            self.kernel_size = kernel_size
+
         # self.padding = (self.kernel_size - 1) // 2  # 22
         self.padding = self.kernel_size // 3  # 15
         self.stride = self.padding
 
-        len_flat = 12  # bc. of combination of input dim, kernel, stride and padding. TODO: Automate.
+        len_flat = int((n_sensors - self.kernel_size + 2*self.padding) // self.stride + 1) # D_out = ((D_in - kernel_size + 2*padding) / stride) + 1 
+        #len_flat = 12 # bc. of combination of input dim, kernel, stride and padding. TODO: Automate.
 
         self.linear = nn.Sequential(
             nn.Linear(self.latent_dims, len_flat),

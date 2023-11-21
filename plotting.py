@@ -16,26 +16,17 @@ def plot_multiple_stats(df_list, label_list, var_list, var_labels_list, xaxis='e
     for i, var in enumerate(var_list):
         ylabel_var = var_labels_list[i]
         # Ensuring same color-stuff:
-        # Retrieve the current color cycle
-        current_cycler = plt.rcParams['axes.prop_cycle']
+        current_cycler = plt.rcParams['axes.prop_cycle'] # Retrieve the current color cycle
         colors = cycle(current_cycler)
         for j in range(len(df_list)):
-
             df = df_list[j]
-            label = label_list[j]
-
-            
-            # calculate the smoothed var using a moving average
+            label = label_list[j] 
+            # calculate the smoothed var and the std using a moving average
             #smoothed_var = df[var].rolling(window_size, center = True, min_periods=1).mean()
-            # calculate the smooth standard deviation using a moving standard deviation
-            smoothed_std = df[var].rolling(window_size, center = True, min_periods=1).std()
-            
+            smoothed_std = df[var].rolling(window_size, center = True, min_periods=1).std() 
             smoothed_var = gaussian_filter1d(df[var], sigma=150)
             #smoothed_std = df[var].rolling(window_size, center = True, min_periods=1).std()
-
-            # Get the next (first hehe) color from the cycle
-            color = next(colors)['color']
-
+            color = next(colors)['color'] # Get the next (first (hehe)) color from the cycle
             if xaxis == 'timesteps': 
                 timesteps = np.arange(len(df[var])) * n_timesteps / len(df[var])
                 plt.plot(timesteps, smoothed_var, color=color, label = label)
@@ -59,10 +50,11 @@ def plot_multiple_stats(df_list, label_list, var_list, var_labels_list, xaxis='e
 
 if __name__ == '__main__':
     # Add the dataframes to the list with the associated model configuration names
-    filenames = ['shallow_locked_stats', 'shallow_unlocked_stats', 'deep_locked_stats', 'deep_unlocked_stats']
+    #filenames = ['shallow_locked_stats', 'shallow_locked_beta_0.5_stats', 'shallow_locked_beta_1.5_stats', 'shallow_locked_beta_3.0_stats']#,'shallow_unlocked_stats', 'deep_locked_stats', 'deep_unlocked_stats']
+    filenames = ['baseline_stats', 'shallow_locked_stats','shallow_unlocked_stats', 'deep_locked_stats', 'deep_unlocked_stats']
     df_list = [pd.read_csv(f'/home/eirikrb/Desktop/gym-auv-cnn/training_reports/data/{f}.csv') for f in filenames]
-    label_list = ['Shallow locked', 'Shallow unlocked', 'Deep locked', 'Deep unlocked']
-
+    #label_list = ['Shallow locked beta 1', 'Shallow locked beta 0.5', 'Shallow locked beta 1.5', 'Shallow locked beta 3.0']#, 'Shallow unlocked', 'Deep locked', 'Deep unlocked']
+    label_list = ['Baseline', 'Shallow locked', 'Shallow unlocked', 'Deep locked', 'Deep unlocked']
     # Variables to plot
     var_list = ['rewards', 'progresses', 'cross_track_errors', 'timesteps', 'durations', 'collisions', 'goals_reached']
     var_labels_list = ['Reward', 'Progress', 'Cross track error', 'Timesteps', 'Duration', 'Collisions', 'Goals reached']
@@ -70,11 +62,12 @@ if __name__ == '__main__':
     window_size = 150 # set to same as sigma in gaussian_filter1d
     n_timesteps = 1000000 # should be same as in run.py
 
+    # Note: When plotting multiple models on top of each other "episodes" makes them more comparable as every entry in the dataframe is an episode
     plot_multiple_stats(df_list=df_list,
                         label_list=label_list, 
                         var_list=var_list,
                         var_labels_list=var_labels_list,
                         window_size=window_size, 
                         n_timesteps=n_timesteps, 
-                        xaxis='timesteps')
+                        xaxis='episodes')
     

@@ -245,7 +245,7 @@ class PerceptionNavigationExtractor(BaseFeaturesExtractor):
                 encoder = ShallowEncoder(subspace, n_sensors=sensor_dim, latent_dims=features_dim, kernel_overlap=kernel_overlap)
                 #encoder = DeepEncoder(subspace, n_sensors=sensor_dim, latent_dims=features_dim, kernel_overlap=kernel_overlap)
                 # Get params from pre-trained encoder saved in file from path 
-                param_path = "/home/eirikrb/Desktop/gym-auv-cnn/gym_auv/utils/pre_trained_encoders/ShallowConvVAE_latent_dims_12_beta_1.json"
+                param_path = "/home/eirikrb/Desktop/gym-auv-cnn/gym_auv/utils/pre_trained_encoders/ShallowConvVAE_latent_dims_12_beta_0.1.json"
                 #param_path = "/home/eirikrb/Desktop/gym-auv-cnn/gym_auv/utils/pre_trained_encoders/DeepConvVAE_latent_dims_12.json"
                 encoder.load_params(param_path)
                 encoder.lock_params() # Locks the parameters of the encoder
