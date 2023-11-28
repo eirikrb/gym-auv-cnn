@@ -2,7 +2,7 @@
 DRL feature extraction via VAE-enoder.
 
 ## Installation
-Tested in:<br/>
+Tested on:<br/>
 Ubuntu 22.04.<br/>
 Python 3.10.x
 
@@ -29,8 +29,7 @@ export ACADOS_SOURCE_DIR="<absolute_acados_root>"
 ```
 (If the former export command does not work, try: ``export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/acados/lib/``)
 
-```
-### Create virtual environment (pip)
+### Create a virtual environment (pip)
 ```
 python3 -m venv /path/to/new/virtual/environment
 source /path/to/venv/bin/activate
@@ -43,5 +42,5 @@ pip install -e <acados_root>/interfaces/acados_template
 #### Additional 
 Download the [https://github.com/acados/tera_renderer/releases](Tera renderer binaries) and place them in <acados_root>/bin.<br/>
 Strip the version and platform from the binaries (e.g.: t_renderer-v0.0.34 -> t_renderer). <br/>
-Notice that you might need to make "t_renderer" executable (right click on the file -> Properties -> Permissions -> Allow executing file as program).
+Notice that you might need to make "t_renderer" executable (right-click on the file -> Properties -> Permissions -> Allow executing file as program).
 
