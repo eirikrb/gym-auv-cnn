@@ -22,6 +22,9 @@ from stable_baselines3.common.callbacks import EveryNTimesteps, EventCallback, B
 import queue
 from collections import deque
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+import matplotlib.colors as mcolors
+
 
 #from gym_auv.utils.radarCNN import RadarCNN, PerceptionNavigationExtractor
 from gym_auv.utils.feature_extractor import ShallowEncoder, PerceptionNavigationExtractor
@@ -1007,7 +1010,7 @@ def main(args):
             # gym_auv.reporting.plot_trajectory(env, fig_dir=scenario_folder, fig_prefix=(args.env + '_' + id))
             # env.save(os.path.join(scenario_folder, id))
 
-            return copy.deepcopy(env.last_episode)
+            return copy.deepcopy(env.last_episode), cumulative_reward
 
         print('Testing scenario "{}" for {} episodes.\n '.format(args.env, args.episodes))
         report_msg_header = '{:<20}{:<20}{:<20}{:<20}{:<20}{:<20}{:<20}'.format('Episode', 'Timesteps', 'Cum. Reward', 'Progress', 'Collisions', 'CT-Error [m]', 'H-Error [deg]')
@@ -1041,11 +1044,8 @@ def main(args):
 
         else:
             safety_filter_comparison = False
-            many_trajs_one_env = True
-
-            agents = ['test_agent_2.pkl', 'test_agent_2.pkl', 'test_agent_2.pkl', 'test_agent_2.pkl']
             agent_path = args.agent[:-9]
-
+            '''
             if safety_filter_comparison:
                 episode_dict = {}
                 agent_index = 0
@@ -1061,6 +1061,7 @@ def main(args):
 
 
                 colors = ['b', 'r', 'orange','purple']
+                cum_rewards = []
                 for episode in range(args.episodes):
                     #if episode % 2 == 0:
                     
@@ -1075,8 +1076,9 @@ def main(args):
                     #     colorval = "orangered"
 
 
-                    last_episode = run_test(valuedict_str + '_ep' + str(episode), report_dir=rep_subfolder, max_t_steps=10000)
+                    last_episode, cum_reward = run_test(valuedict_str + '_ep' + str(episode), report_dir=rep_subfolder, max_t_steps=10000)
                     episode_dict['Agent ' + str(agent_index)] = [last_episode, colorval]
+                    cum_rewards.append(cum_reward)
                     agent_index += 1
 
                 env.last_episode = last_episode
@@ -1088,55 +1090,61 @@ def main(args):
                     failed_idx.append(int(failed_test[-1]))
                 #print('failed_idx', failed_idx)
 
-                          
                 gym_auv.reporting.plot_many_trajectories(figure_folder, env, fig_dir=figure_folder, fig_prefix=(args.env + '_all_agents'), episode_dict=episode_dict, failed_idx=failed_idx)
-            
-            elif many_trajs_one_env:
-                print("manytraj")
-                episode_dict = {}
-                agent_index = 0
+            '''
 
-                customconfig = envconfig.copy()
-                env, active_env = create_test_env(envconfig=customconfig, video_name_prefix=args.env)
-                valuedict_str = "test"
 
+            many_trajs_one_env = True
+            agents_shallow = ['shallow_locked_3m.pkl' for i in range(15)]
+            agents_deep = ['deep_locked_3m.pkl' for i in range(15)]
+            agents_baseline = ['baseline_3m.pkl' for i in range(15)]
+
+            agents_ = [agents_shallow, agents_deep, agents_baseline]
+
+            for agents in agents_:
+                if many_trajs_one_env:
+                    episode_dict = {}
+                    agent_index = 0
+
+                    customconfig = envconfig.copy()
+                    env, active_env = create_test_env(envconfig=customconfig, video_name_prefix=args.env)
+                    valuedict_str = "test"
+
+                    rep_subfolder = os.path.join(figure_folder, valuedict_str)
+                    os.makedirs(rep_subfolder, exist_ok=True)
+
+                    cum_rewards = []
+                    for episode, a in enumerate(agents):
+                        agent = model.load(a)
+                        last_episode, cum_reward = run_test(valuedict_str + '_ep' + str(episode), report_dir=rep_subfolder, max_t_steps=10000)
+                        episode_dict['Agent ' + str(agents[0]) + str(agent_index)] = [last_episode, 'orangered']
+                        cum_rewards.append(cum_reward)
+                        agent_index += 1
+
+                    env.last_episode = last_episode
+
+                    print(cum_rewards)
+                    #find failed indices
+                    failed_idx = []
+                    for failed_test in failed_tests:
+                        failed_idx.append(int(failed_test[-1]))
+                    #print('failed_idx', failed_idx)
+
+                    # Create colormap from rewards and insert to episode_dict
+                    norm = mcolors.Normalize(vmin=min(cum_rewards), vmax=max(cum_rewards))
+                    colors_cm = ["#00006b", "#0000cd", "#2f64d0","#1fa0e0" , "#6fe3ff"]  # Custom; Light blue to dark blue
+                    custom_colormap = LinearSegmentedColormap.from_list("custom_blue", colors_cm, N=256)
+                    colors = []
+                    for r in cum_rewards:
+                        colors.append(custom_colormap(norm(r))) 
+                    for i, (key, _) in enumerate(episode_dict.items()):
+                        episode_dict[key][1] = colors[i]
+                    # sort dict after increasing rewards
+                    episode_dict = dict(sorted(episode_dict.items(), key=lambda item: item[1][1]))
+                    sm = plt.cm.ScalarMappable(cmap=custom_colormap, norm=norm)
+
+                    gym_auv.reporting.plot_many_trajectories(figure_folder, env, fig_dir=figure_folder, fig_prefix=(args.env + '_all_agents'), episode_dict=episode_dict, failed_idx=failed_idx, sm=sm)
                 
-                rep_subfolder = os.path.join(figure_folder, valuedict_str)
-                os.makedirs(rep_subfolder, exist_ok=True)
-                idx = 0
-
-
-                colors = ['b', 'r', 'orange','purple']
-                for episode in range(args.episodes):
-                    #if episode % 2 == 0:
-                    
-                    #envconfig['safety_filter'] = True
-                    agent = model.load(agents[idx])
-                    colorval = colors[idx]
-                    
-                    idx += 1
-
-                    # else:
-                    #     envconfig['safety_filter'] = False
-                    #     colorval = "orangered"
-
-
-                    last_episode = run_test(valuedict_str + '_ep' + str(episode), report_dir=rep_subfolder, max_t_steps=10000)
-                    episode_dict['Agent ' + str(agent_index)] = [last_episode, colorval]
-                    agent_index += 1
-
-                env.last_episode = last_episode
-
-
-                #find failed indices
-                failed_idx = []
-                for failed_test in failed_tests:
-                    failed_idx.append(int(failed_test[-1]))
-                #print('failed_idx', failed_idx)
-
-                          
-                gym_auv.reporting.plot_many_trajectories(figure_folder, env, fig_dir=figure_folder, fig_prefix=(args.env + '_all_agents'), episode_dict=episode_dict, failed_idx=failed_idx)
-            
             else:
                 env, active_env = create_test_env(video_name_prefix=args.env)
                 for episode in range(args.episodes):

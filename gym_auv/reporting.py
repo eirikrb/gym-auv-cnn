@@ -1024,7 +1024,7 @@ def test_report(fig_dir):
 
 
 
-def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_prefix='', episode_dict=None, failed_idx=None):
+def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_prefix='', episode_dict=None, failed_idx=None, sm=None):
     """
     Plots the result of a path following episode.
 
@@ -1087,12 +1087,12 @@ def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_
             obst_object = plt.Circle(
                 obst.position,
                 obst.radius,
-                facecolor='tab:red',
+                facecolor='#DF694E',
                 edgecolor='black',
                 linewidth=0.5,
                 zorder=10
             )
-            obst_object.set_hatch('////')
+            obst_object.set_hatch('..')
             obst = ax.add_patch(obst_object)
         elif isinstance(obst, PolygonObstacle):
             obst_object = plt.Polygon(
@@ -1128,7 +1128,7 @@ def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_
             if (not local) and isinstance(obst, VesselObstacle):
                 x_arr = [elm[1][0] for elm in obst.trajectory]
                 y_arr = [elm[1][1] for elm in obst.trajectory]
-                ax.plot(x_arr, y_arr, dashes=[6, 2], color='red', linewidth=0.5, alpha=0.3)
+                ax.plot(x_arr, y_arr, dashes=[6, 2], color='#DF694E', linewidth=0.5, alpha=0.3)
 
             if not local:
                 plt.arrow(
@@ -1156,7 +1156,7 @@ def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_
                 vessel_obst_object = plt.Polygon(
                     np.array(list(vessel_obst.boundary.exterior.coords)), True,
                     facecolor='#C0C0C0',
-                    edgecolor='red',
+                    edgecolor='#DF694E',
                     linewidth=0.5,
                     zorder=10
                 )
@@ -1171,7 +1171,7 @@ def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_
                 vessel_obst_object = plt.Polygon(
                     np.array(list(vessel_obst.init_boundary.exterior.coords)), True,
                     facecolor='#C0C0C0',
-                    edgecolor='red',
+                    edgecolor='#DF694E',
                     linewidth=0.5,
                     zorder=10
                 )
@@ -1190,7 +1190,7 @@ def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_
                 vessel_obst_object = plt.Polygon(
                     np.array(list(vessel_obst.boundary.exterior.coords)), True,
                     facecolor='none',
-                    edgecolor='red',
+                    edgecolor='#DF694E',
                     linewidth=0.5,
                     linestyle='--',
                     zorder=10
@@ -1223,7 +1223,7 @@ def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_
         vessel_obst_object = plt.Polygon(
             np.array(list(vessel_obst.boundary.exterior.coords)), True,
             facecolor='#C0C0C0',
-            edgecolor='red',
+            edgecolor='#DF694E',
             linewidth=0.5,
             zorder=10
         )
@@ -1304,27 +1304,33 @@ def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_
             value_path_taken = episode_dict[value_key][0]['path_taken']
             # if int(value_key[-1]) % 2 == 1:
             #     value_path_taken[:, 1] += offset
-            ax.plot(value_path_taken[:, 0], value_path_taken[:, 1], markersize=10, color=episode_dict[value_key][1], linewidth=1.3, label=value_key)
+            ax.plot(value_path_taken[:, 0], value_path_taken[:, 1], markersize=10, linewidth=0.8, color=episode_dict[value_key][1])#, linewidth=1.0)#, label=value_key)
 
             if episode in failed_idx:
                 #plot a greeen X on the final position 
-                ax.plot(value_path_taken[-1, 0], value_path_taken[-1, 1], 'x', color='lime', markersize=5, zorder=10, markeredgewidth=2)
+                ax.plot(value_path_taken[-1, 0], value_path_taken[-1, 1], 'x', color='forestgreen', markersize=3, zorder=10, markeredgewidth=1)
 
 
             episode += 1
         
         handles, labels = ax.get_legend_handles_labels()
-        green_cross = mlines.Line2D([], [], color='lime', marker='x', linestyle='None', label='Collision', markeredgewidth=2)
+        green_cross = mlines.Line2D([], [], color='forestgreen', marker='x', linestyle='None', label='Collision', markeredgewidth=2)
         handles.append(green_cross)
         labels.append(green_cross.get_label())
         ax.legend(handles=handles, labels=labels, loc='best')
+
+        if sm is not None:
+            sm.set_array([])
+            cbar = plt.colorbar(sm, ax=ax, label='Cumulative Reward')
+            cbar.ax.set_ylabel('Cumulative Reward', fontsize=10)  # Setting a smaller fontsize
+
 
 
         # # Create proxy artists for the custom legends
         # black_line = mlines.Line2D([], [], dashes=[3*dashmultiplier, 1*dashmultiplier], color='black', label='Path')
         # blue_line = mlines.Line2D([], [], color='b', label='Safety Filter')
         # orange_line = mlines.Line2D([], [],color='orangered', label='No Safety Filter')
-        green_cross = mlines.Line2D([], [], color='lime', marker='x', linestyle='None', label='Collision', markeredgewidth=2)
+        #green_cross = mlines.Line2D([], [], color='forestgreen', marker='x', linestyle='None', label='Collision', markeredgewidth=2)
 
         # # Add the custom legends to the plot
         # ax.legend(handles=[black_line, blue_line, orange_line, green_cross], loc='best')
@@ -1344,13 +1350,14 @@ def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_
         ax.annotate("Goal", 
             xy=(path[0, -1], path[1, -1] + (axis_max - axis_min)/25),   
             fontsize=11, ha="center", zorder=20, color='white', family='sans-serif',
-            bbox=dict(facecolor='tab:red', edgecolor='black', alpha=0.75, boxstyle='round')
+            bbox=dict(facecolor='#DF694E', edgecolor='black', alpha=0.75, boxstyle='round')
         )
+        '''
         ax.annotate("Start", 
             xy=(path[0, 0], path[1, 0] - (axis_max - axis_min)/20),
             fontsize=11, ha="center", zorder=20, color='white', family='sans-serif',
             bbox=dict(facecolor='tab:red', edgecolor='black', alpha=0.75, boxstyle='round')
-        )
+        )'''
 
     fig.savefig(os.path.join(fig_dir, '{}path.pdf'.format(fig_prefix)), format='pdf', bbox_inches='tight')
     plt.close(fig)

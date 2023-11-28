@@ -15,7 +15,7 @@ acados_ocp/*
 *.pyc
 logs/play_results/report.txt
 *.json
-*.pkl
+.pkl
 resources/*
 
 
