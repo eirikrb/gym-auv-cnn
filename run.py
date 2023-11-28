@@ -23,7 +23,7 @@ import queue
 from collections import deque
 import matplotlib.pyplot as plt
 
-
+#from gym_auv.utils.radarCNN import RadarCNN, PerceptionNavigationExtractor
 from gym_auv.utils.feature_extractor import ShallowEncoder, PerceptionNavigationExtractor
 
 
@@ -239,6 +239,7 @@ def play_scenario(env, recorded_env, args, agent=None):
                     break
             
             env.seed(np.random.randint(1000))
+            #env.seed(10)
             env.save_latest_episode()
             #gym_auv.reporting.report(env, report_dir='logs/play_results/')
             #gym_auv.reporting.plot_trajectory(figure_folder, env, fig_dir='logs/play_results/')
@@ -728,8 +729,8 @@ def main(args):
 
         ### CALLBACKS ###
         # Things we want to do: calculate statistics, say 1000 times during training.
-        total_timesteps = 1000000 #10000000 # 3M timesteps in hannah's training
-        save_stats_freq = total_timesteps // 100  # Save stats 1000 times during training (EveryNTimesteps)
+        total_timesteps = 3000000 #1000000 # 3M timesteps in hannah's training
+        save_stats_freq = total_timesteps // 300 #100  # Save stats 1000 times during training (EveryNTimesteps)
         save_agent_freq = total_timesteps // 10   # Save the agent 100 times throughout training
         record_agent_freq = total_timesteps // 1  # Evaluate and record 10 times during training (EvalCallback)
         # StopTrainingOnRewardThreshold could be used when setting total_timesteps = "inf" and stop the training when the agent is perfect. To see how long it actually takes.
@@ -1040,7 +1041,9 @@ def main(args):
 
         else:
             safety_filter_comparison = False
-            agents = ['10000.pkl', '50000.pkl', '100000.pkl', '500000.pkl']
+            many_trajs_one_env = True
+
+            agents = ['test_agent_2.pkl', 'test_agent_2.pkl', 'test_agent_2.pkl', 'test_agent_2.pkl']
             agent_path = args.agent[:-9]
 
             if safety_filter_comparison:
@@ -1087,11 +1090,59 @@ def main(args):
 
                           
                 gym_auv.reporting.plot_many_trajectories(figure_folder, env, fig_dir=figure_folder, fig_prefix=(args.env + '_all_agents'), episode_dict=episode_dict, failed_idx=failed_idx)
+            
+            elif many_trajs_one_env:
+                print("manytraj")
+                episode_dict = {}
+                agent_index = 0
+
+                customconfig = envconfig.copy()
+                env, active_env = create_test_env(envconfig=customconfig, video_name_prefix=args.env)
+                valuedict_str = "test"
+
+                
+                rep_subfolder = os.path.join(figure_folder, valuedict_str)
+                os.makedirs(rep_subfolder, exist_ok=True)
+                idx = 0
+
+
+                colors = ['b', 'r', 'orange','purple']
+                for episode in range(args.episodes):
+                    #if episode % 2 == 0:
+                    
+                    #envconfig['safety_filter'] = True
+                    agent = model.load(agents[idx])
+                    colorval = colors[idx]
+                    
+                    idx += 1
+
+                    # else:
+                    #     envconfig['safety_filter'] = False
+                    #     colorval = "orangered"
+
+
+                    last_episode = run_test(valuedict_str + '_ep' + str(episode), report_dir=rep_subfolder, max_t_steps=10000)
+                    episode_dict['Agent ' + str(agent_index)] = [last_episode, colorval]
+                    agent_index += 1
+
+                env.last_episode = last_episode
+
+
+                #find failed indices
+                failed_idx = []
+                for failed_test in failed_tests:
+                    failed_idx.append(int(failed_test[-1]))
+                #print('failed_idx', failed_idx)
+
+                          
+                gym_auv.reporting.plot_many_trajectories(figure_folder, env, fig_dir=figure_folder, fig_prefix=(args.env + '_all_agents'), episode_dict=episode_dict, failed_idx=failed_idx)
+            
             else:
                 env, active_env = create_test_env(video_name_prefix=args.env)
                 for episode in range(args.episodes):
                     run_test('ep' + str(episode), env=env, active_env=active_env, max_t_steps=10000)
                 print("{:0.2f}% successfull episodes".format(100*(1-len(failed_tests)/args.episodes)))
+        
         if args.video and active_env:
             active_env.close()
 

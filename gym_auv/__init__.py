@@ -51,8 +51,9 @@ DEFAULT_CONFIG = {
     "autocamera3d": True,                            # Whether to let the camera automatically rotate during 3d rendering
 
     # ---- SAFETY FILTER ---- #
-    "safety_filter": True,                              # Whether to use safety filter
-    "safety_filter_mode": 'lidar',                    # Which safety filter mode to use. Opts = {'obstacles', 'lidar', 'lidar_and_moving_obstacles'}
+    "safety_filter": False,                              # Whether to use safety filter
+    "safety_filter_mode": 'lidar',         
+               # Which safety filter mode to use. Opts = {'obstacles', 'lidar', 'lidar_and_moving_obstacles'}
     
     # ---- SSH ---- #
     "SSH": False,                                        # Disable graphics to start training with SSH
