@@ -1093,60 +1093,6 @@ def main(args):
                 gym_auv.reporting.plot_many_trajectories(figure_folder, env, fig_dir=figure_folder, fig_prefix=(args.env + '_all_agents'), episode_dict=episode_dict, failed_idx=failed_idx)
             '''
 
-
-            many_trajs_one_env = True
-            agent_ = 'shallow_locked_3m.pkl' # 'deep_locked_3m.pkl' # 'baseline_3m.pkl'
-            agents = [agent_ for i in range(15)]
-
-            if many_trajs_one_env:
-                episode_dict = {}
-                agent_index = 0
-
-                customconfig = envconfig.copy()
-                env, active_env = create_test_env(envconfig=customconfig, video_name_prefix=args.env)
-                valuedict_str = "test"
-
-                rep_subfolder = os.path.join(figure_folder, valuedict_str)
-                os.makedirs(rep_subfolder, exist_ok=True)
-
-                cum_rewards = []
-                for episode, a in enumerate(agents):
-                    agent = model.load(a)
-                    last_episode, cum_reward = run_test(valuedict_str + '_ep' + str(episode), report_dir=rep_subfolder, max_t_steps=10000)
-                    episode_dict['Agent ' + str(agents[0]) + str(agent_index)] = [last_episode, 'orangered']
-                    cum_rewards.append(cum_reward)
-                    agent_index += 1
-
-                env.last_episode = last_episode
-
-                print(cum_rewards)
-                #find failed indices
-                failed_idx = []
-                for failed_test in failed_tests:
-                    failed_idx.append(int(failed_test[-1]))
-                #print('failed_idx', failed_idx)
-
-                # Create colormap from rewards and insert to episode_dict
-                norm = mcolors.Normalize(vmin=min(cum_rewards), vmax=max(cum_rewards))
-                colors_cm = ["#00006b", "#0000cd", "#2f64d0","#1fa0e0" , "#6fe3ff"]  # Custom; Light blue to dark blue
-                custom_colormap = LinearSegmentedColormap.from_list("custom_blue", colors_cm, N=256)
-                colors = []
-                for r in cum_rewards:
-                    colors.append(custom_colormap(norm(r))) 
-                for i, (key, _) in enumerate(episode_dict.items()):
-                    episode_dict[key][1] = colors[i]
-                # sort dict after increasing rewards
-                episode_dict = dict(sorted(episode_dict.items(), key=lambda item: item[1][1]))
-                sm = plt.cm.ScalarMappable(cmap=custom_colormap, norm=norm)
-
-                gym_auv.reporting.plot_many_trajectories(figure_folder, env, fig_dir=figure_folder, fig_prefix=(args.env + '_all_agents'), episode_dict=episode_dict, failed_idx=failed_idx, sm=sm)
-            
-            else:
-                env, active_env = create_test_env(video_name_prefix=args.env)
-                for episode in range(args.episodes):
-                    run_test('ep' + str(episode), env=env, active_env=active_env, max_t_steps=10000)
-                print("{:0.2f}% successfull episodes".format(100*(1-len(failed_tests)/args.episodes)))
-        
         if args.video and active_env:
             active_env.close()
 

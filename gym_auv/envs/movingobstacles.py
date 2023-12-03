@@ -29,34 +29,24 @@ class MovingObstacles(BaseEnvironment):
 
     def _generate(self):
         # Initializing path
-        self.rng = np.random.RandomState(1) # ADDED
-        rng_vessel_init = np.random.RandomState(np.random.randint(1000000)) # ADDED
+        
         if not hasattr(self, '_n_waypoints'):
             self._n_waypoints = int(np.floor(4*self.rng.rand() + 2))
 
         self.path = RandomCurveThroughOrigin(self.rng, self._n_waypoints, length=500)
 
         # Initializing vessel
+
+        
         init_state = self.path(0)
         init_angle = self.path.get_direction(0)
-        init_state[0] += 200*(rng_vessel_init.rand()-0.5)
-        init_state[1] += 200*(rng_vessel_init.rand()-0.5)
-        init_angle = geom.princip(init_angle + 2*np.pi*(rng_vessel_init.rand()-0.5))
+        init_state[0] += 50*(self.rng.rand()-0.5)
+        init_state[1] += 50*(self.rng.rand()-0.5)
+        init_angle = geom.princip(init_angle + 2*np.pi*(self.rng.rand()-0.5))
         self.vessel = Vessel(self.config, np.hstack([init_state, init_angle]), width=self.config["vessel_width"])
         prog = 0
         self.path_prog_hist = np.array([prog])
         self.max_path_prog = prog
-
-        #USED TO BE:
-        #init_state = self.path(0)
-        #init_angle = self.path.get_direction(0)
-        #init_state[0] += 50*(self.rng.rand()-0.5)
-        #init_state[1] += 50*(self.rng.rand()-0.5)
-        #init_angle = geom.princip(init_angle + 2*np.pi*(self.rng.rand()-0.5))
-        #self.vessel = Vessel(self.config, np.hstack([init_state, init_angle]), width=self.config["vessel_width"])
-        #prog = 0
-        #self.path_prog_hist = np.array([prog])
-        #self.max_path_prog = prog
         
         self.obstacles = []
 
