@@ -19,7 +19,7 @@ logs/play_results/report.txt
 resources/*
 
 
-# Default stuff:
+# Default:
 
 # Jupyter Notebook
 .ipynb_checkpoints

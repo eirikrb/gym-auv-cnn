@@ -41,6 +41,9 @@ class MovingObstacles(BaseEnvironment):
         init_state[0] += 50*(self.rng.rand()-0.5)
         init_state[1] += 50*(self.rng.rand()-0.5)
         init_angle = geom.princip(init_angle + 2*np.pi*(self.rng.rand()-0.5))
+        init_state[0] += 50*(self.rng.rand()-0.5)
+        init_state[1] += 50*(self.rng.rand()-0.5)
+        init_angle = geom.princip(init_angle + 2*np.pi*(self.rng.rand()-0.5))
         self.vessel = Vessel(self.config, np.hstack([init_state, init_angle]), width=self.config["vessel_width"])
         prog = 0
         self.path_prog_hist = np.array([prog])
