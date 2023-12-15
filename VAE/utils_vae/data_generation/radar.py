@@ -7,6 +7,11 @@ import shapely.geometry
 import shapely.affinity
 
 
+
+# Created by Henrik S. Berg (Oct 2023) with inspiration from Meyer (2020)
+# Tailored for this project by Eirik R. Barlaug (Nov 2023)
+
+
 class RadarEnvironment():
     """Radar environment for generating synthetic data in the same manner as in the RL environment."""
     def __init__(self, sensor_range=150, num_sensors=180, num_circles=10, mean_radius = 25, num_moving_obstacles = 10, moving_mean = 10, safe_zone_radius = 10 ):

@@ -1,6 +1,0 @@
-Metadata: Number of seeds: 5, epochs: 25, batch size: 64, learning rate: 0.001
-
-Mean: 42.67201741516169
-Std: 0.09646422415919215
-Confidence interval: 0.0845546205457586
-All test losses: [42.80304061 42.73445691 42.69996734 42.55214605 42.57047617]

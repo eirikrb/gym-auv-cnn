@@ -26,8 +26,8 @@ from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.colors as mcolors
 
 
-from gym_auv.utils.radarCNN import RadarCNN, PerceptionNavigationExtractor
-#from gym_auv.utils.feature_extractor import ShallowEncoder, PerceptionNavigationExtractor
+#from gym_auv.utils.radarCNN import RadarCNN, PerceptionNavigationExtractor
+from gym_auv.utils.VAE_feature_extractor import ShallowEncoder, PerceptionNavigationExtractor
 
 
 speedups.enable()
@@ -1095,7 +1095,7 @@ def main(args):
 
 
             many_trajs_one_env = False
-            agent_ = 'shallow_alocked_3m.pkl' # 'baseline_3m.pkl'
+            agent_ = 'shallow_locked_3m.pkl' # 'baseline_3m.pkl' # Note: this must be consistent with the setting in the feature_extractor module, as well as the choice of pretrained agent in the parser
             agents = [agent_ for i in range(10)]
 
             if many_trajs_one_env:

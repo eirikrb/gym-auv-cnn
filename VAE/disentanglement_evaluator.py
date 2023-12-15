@@ -10,6 +10,9 @@ import os
 import argparse
 import json
 
+
+# UNFINISHED MODULE AS PER DEC 2023
+
 class Disentanglement_evaluator():
     """
     Class for measuring  the disentanglement of the latent space, given some model. (Both) metric (w/o name) (and mutual information gap (MIG)) are implemented

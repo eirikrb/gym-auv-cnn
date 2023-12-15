@@ -39,7 +39,7 @@ class Trainer():
         """Calculates loss function for VAE, returns (total loss, reconstruction loss, KL divergence loss)"""
         BCE_loss = F.binary_cross_entropy(x_hat, x, reduction='sum')#, weight=BCE_weights) # Reconstruction loss
         KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp()) # KL divergence loss
-        # N/M = number of samples in dataset / number of samples in a single batch
+        # N and M stuff is deprecated, remove later
         N = 1
         M = 1
         return (N/M)*(BCE_loss + beta*KLD_loss), (N/M)*BCE_loss, (N/M)*KLD_loss
@@ -121,7 +121,7 @@ class Trainer():
 
 ###########################################################################################################
 class Trainer_old():
-    """Trainer class for training VAE models"""
+    """Trainer class for training VAE models, deprecated as per December 2023"""
     def __init__(self,
                  model:nn.Module,
                  epochs:int,

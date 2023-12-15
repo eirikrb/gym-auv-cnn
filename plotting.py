@@ -83,9 +83,11 @@ if __name__ == '__main__':
     var_list = ['rewards', 'progresses', 'cross_track_errors', 'timesteps', 'durations', 'collisions', 'goals_reached']
     var_labels_list = ['Reward', 'Progress', 'CTE', 'Timesteps', 'Duration', 'Collisions', 'Goals reached']
 
-    # PLOTTING 4 CONFIGURATION COMPARISON 1M timesteps
+    # Below follows plotting of different configurations
     # Note: When plotting multiple models on top of each other "episodes" makes them more comparable as every entry in the dataframe is an episode
+    
     '''
+    # PLOTTING 4 CONFIGURATION COMPARISON 1M timesteps
     filenames = ['shallow_locked_stats','shallow_unlocked_stats', 'deep_locked_stats', 'deep_unlocked_stats', 'nosafety_stats']
     df_list = [pd.read_csv(f'/home/eirikrb/Desktop/gym-auv-cnn/training_reports/data/basetest_1M/{f}.csv') for f in filenames]
     label_list = ['PPO + ShallowVAE [locked]', 'PPO + ShallowVAE [unlocked]', 'PPO + DeepVAE [locked]', 'PPO + DeepVAE [unlocked]', 'No safety filter']

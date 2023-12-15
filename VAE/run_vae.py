@@ -33,12 +33,12 @@ def main(args):
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     # Data paths
-    path_empty = "data/LiDAR_synthetic_empty.csv"
-    path_moving_dense = "data/LiDAR_synthetic_onlyMovingObst_dense.csv"
-    path_moving_sparse = "data/LiDAR_synthetic_onlyMovingObst_sparse.csv"
-    path_static_dense = "data/LiDAR_synthetic_onlyStaticObst_dense.csv"
-    path_static_moving = "data/LiDAR_synthetic_staticMovingObst.csv"
-    path_moving_obs_no_rules = "data/LiDAR_MovingObstaclesNoRules.csv"
+    path_empty                = "data/LiDAR_synthetic_empty.csv"
+    path_moving_dense         = "data/LiDAR_synthetic_onlyMovingObst_dense.csv"
+    path_moving_sparse        = "data/LiDAR_synthetic_onlyMovingObst_sparse.csv"
+    path_static_dense         = "data/LiDAR_synthetic_onlyStaticObst_dense.csv"
+    path_static_moving        = "data/LiDAR_synthetic_staticMovingObst.csv"
+    path_moving_obs_no_rules  = "data/LiDAR_MovingObstaclesNoRules.csv"
 
     DATA_PATHS = [path_moving_dense, path_static_dense, path_static_moving, path_moving_obs_no_rules]
 
@@ -59,6 +59,8 @@ def main(args):
                                                                                 num_rotations=num_rotations,
                                                                                 roll_degrees=rolling_degrees,
                                                                                 add_noise_to_train=True)
+    
+    
     #datapath = 'data/LiDAR_MovingObstaclesNoRules.csv'
     if args.mode == 'train':
         # Set global model name 
@@ -198,10 +200,13 @@ def main(args):
         if 'latent_dims_sweep' in args.plot: 
             print("Staring latent dimension size sweep...")
             model_name_ = f'{name}_latent_dims_sweep_2'
+
             latent_dims_grid = [1, 2, 6, 12, 24]
+
             total_val_losses_for_latent_dims = [] # Fill up with val losses for each latent dim
-            bce_val_losses_for_latent_dims = [] # Fill up with val losses for each latent dim
-            kl_val_losses_for_latent_dims = [] # Fill up with val losses for each latent dim
+            bce_val_losses_for_latent_dims = []   
+            kl_val_losses_for_latent_dims = []   
+
             for l in latent_dims_grid:
                 print(f'Latent dimension: {l}')
                 total_val_losses = np.zeros((NUM_SEEDS, N_EPOCH))
@@ -268,7 +273,7 @@ def main(args):
                     tester.report_test_stats(test_losses=test_losses, model_name=model_name_, metadata=metadata)
 
             labels = [f'Latent dim = {l}' for l in latent_dims_grid]
-            plot_loss_multiple_seeds(loss_trajectories=total_val_losses_for_latent_dims, labels=labels, model_name=model_name_, save=True) # vurdere å slitte opp?
+            plot_loss_multiple_seeds(loss_trajectories=total_val_losses_for_latent_dims, labels=labels, model_name=model_name_, save=True) 
             plot_separated_losses(total_val_losses_for_latent_dims, bce_val_losses_for_latent_dims, kl_val_losses_for_latent_dims, labels, model_name=model_name_, save=True) 
           
             
@@ -427,17 +432,9 @@ def main(args):
                 latent_space_kde(model=vae1, dataloader=dataloader_test, name=f'latent_kde_beta_{b}_shallow', save=True)
                 latent_space_kde(model=vae2, dataloader=dataloader_test, name=f'latent_kde_beta_{b}_deep', save=True)
 
-                
                 del trainer1, vae1, encoder1, decoder1, optimizer1, trainer2, vae2, encoder2, decoder2, optimizer2
                 
                 
-
-                            
-             
-        
-
-
-
 
 """
     if args.mode == 'test':
@@ -491,7 +488,14 @@ if __name__ == '__main__':
     parser.add_argument('--plot',
                         help= 'Plotting mode',
                         type=str,
-                        choices=['reconstructions', 'loss', 'separated_losses', 'latent_dims_sweep', 'latent_distributions', 'test_loss_report', 'eps_weight_sweep', 'latent_dist_kde'],
+                        choices=['reconstructions', 
+                                 'loss', 
+                                 'separated_losses', 
+                                 'latent_dims_sweep', 
+                                 'latent_distributions', 
+                                 'test_loss_report', 
+                                 'eps_weight_sweep', 
+                                 'latent_dist_kde'],
                         nargs='+',
                         default = ['separated_losses']
     )

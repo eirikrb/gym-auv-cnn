@@ -5,7 +5,7 @@ models/*
 logs/*
 .gitignore
 SB3/
-*/data/*
+#*/data/*
 gym_auv_cnn_env/*
 c_generated_code/*
 acados_ocp/*
@@ -13,10 +13,12 @@ acados_ocp/*
 *.png
 *.pdf
 *.pyc
+#*.json
 logs/play_results/report.txt
-*.json
-.pkl
 resources/*
+figures/*
+*.txt
+
 
 
 # Default:

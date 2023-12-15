@@ -23,7 +23,7 @@ def generate_obstacle(rng, path, vessel, displacement_dist_std=150, obst_radius_
 
     return (obst_position, obst_radius)
 
-''' #USED WHEN PLOTTING MULTIPLE TRAJS, THE ABOVE IS THE ORIGINAL
+''' #USED WHEN PLOTTING MULTIPLE TRAJS, THE ABOVE IS THE ORIGINAL, This uses rng everywhere
 def generate_obstacle(rng, path, vessel, displacement_dist_std=150, obst_radius_distr=np.random.poisson, obst_radius_mean=30):
     min_distance = 0
     while min_distance <= 100:
