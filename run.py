@@ -26,8 +26,8 @@ from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.colors as mcolors
 
 
-#from gym_auv.utils.radarCNN import RadarCNN, PerceptionNavigationExtractor
-from gym_auv.utils.feature_extractor import ShallowEncoder, PerceptionNavigationExtractor
+from gym_auv.utils.radarCNN import RadarCNN, PerceptionNavigationExtractor
+#from gym_auv.utils.feature_extractor import ShallowEncoder, PerceptionNavigationExtractor
 
 
 speedups.enable()
@@ -1094,9 +1094,9 @@ def main(args):
             '''
 
 
-            many_trajs_one_env = True
-            agent_ = 'shallow_locked_3m.pkl' # 'deep_locked_3m.pkl' # 'baseline_3m.pkl'
-            agents = [agent_ for i in range(15)]
+            many_trajs_one_env = False
+            agent_ = 'shallow_alocked_3m.pkl' # 'baseline_3m.pkl'
+            agents = [agent_ for i in range(10)]
 
             if many_trajs_one_env:
                 episode_dict = {}
@@ -1126,6 +1126,9 @@ def main(args):
                     failed_idx.append(int(failed_test[-1]))
                 #print('failed_idx', failed_idx)
 
+                # Sort failed idx after increasing rewards so that it aligns with sorting of the trajectories
+                #failed_idx = sorted(failed_idx, key=lambda x: cum_rewards[x])
+
                 # Create colormap from rewards and insert to episode_dict
                 norm = mcolors.Normalize(vmin=min(cum_rewards), vmax=max(cum_rewards))
                 colors_cm = ["#00006b", "#0000cd", "#2f64d0","#1fa0e0" , "#6fe3ff"]  # Custom; Light blue to dark blue
@@ -1135,15 +1138,22 @@ def main(args):
                     colors.append(custom_colormap(norm(r))) 
                 for i, (key, _) in enumerate(episode_dict.items()):
                     episode_dict[key][1] = colors[i]
-                # sort dict after increasing rewards
-                episode_dict = dict(sorted(episode_dict.items(), key=lambda item: item[1][1]))
+                #print(colors)
+                # Sort dict after increasing rewards
+                #episode_dict = dict(sorted(episode_dict.items(), key=lambda x: cum_rewards[int(x[0][-1])]))
+                #print(episode_dict.values())
                 sm = plt.cm.ScalarMappable(cmap=custom_colormap, norm=norm)
-
+                #failed_idx = sorted(failed_idx, key=lambda x: cum_rewards[x])
+                #print(failed_idx)
                 gym_auv.reporting.plot_many_trajectories(figure_folder, env, fig_dir=figure_folder, fig_prefix=(args.env + '_all_agents'), episode_dict=episode_dict, failed_idx=failed_idx, sm=sm)
             
             else:
                 env, active_env = create_test_env(video_name_prefix=args.env)
+                rs = np.random.RandomState(0)
+                seeds = list(np.random.randint(0, 100000, size=args.episodes))
                 for episode in range(args.episodes):
+                    env.seed(int(seeds[episode]))
+                    #env.rng = np.random.RandomState(int(episode))
                     run_test('ep' + str(episode), env=env, active_env=active_env, max_t_steps=10000)
                 print("{:0.2f}% successfull episodes".format(100*(1-len(failed_tests)/args.episodes)))
         

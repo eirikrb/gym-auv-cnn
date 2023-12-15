@@ -6,7 +6,7 @@ from itertools import cycle
 
 
 def plot_multiple_stats(df_list, label_list, var_list, var_labels_list, xaxis='episodes', window_size=100, n_timesteps = 1000000, path:str=None, legend_plot:str='rewards'):
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(10, 6))
     plt.style.use('ggplot')
     plt.rc('font', family='serif')
     plt.rc('xtick', labelsize=12)
@@ -29,7 +29,25 @@ def plot_multiple_stats(df_list, label_list, var_list, var_labels_list, xaxis='e
             smoothed_std = df[var].rolling(2*window_size, center = True, min_periods=1).std()
             #smoothed_var = df[var].ewm(span=window_size, ignore_na=True).mean()
             #smoothed_std = df[var].ewm(span=window_size).std()
-            #smoothed_std = df[var].rolling(window_size, center = True, min_periods=1).std()
+            #smoothed_std = df[var].rolling(window_size, center = True, min_periods=1).std()   
+            
+            # Bounds         
+            low = smoothed_var - smoothed_std
+            high = smoothed_var + smoothed_std
+            if xaxis == 'timesteps':
+                low = low.to_numpy()
+                high = high.to_numpy()
+            
+            # Set bounds so no impossible values are displayed in varaince bands 
+            if var == 'cross_track_errors':
+                low[low < 0] = 0 # no negative CTE
+            elif var == 'collisions':
+                low[low < 0] = 0 # no negative collision rate
+            elif var == 'progresses':
+                low[low < 0] = 0 # no negative path progress
+                high[high > 1] = 1 # no progress > 1
+
+
             color = next(colors)['color'] # Get the next (first (hehe)) color from the cycle
             linestyle = 'solid'
             if label == 'PPO + 1-layer CNN [unlocked] (Baseline)':
@@ -37,16 +55,17 @@ def plot_multiple_stats(df_list, label_list, var_list, var_labels_list, xaxis='e
                 linestyle = 'dashed'
             if xaxis == 'timesteps': 
                 timesteps = np.arange(len(df[var])) * n_timesteps / len(df[var])
-                plt.plot(timesteps, smoothed_var, color=color, label=label, linestyle=linestyle, linewidth=1)
+                plt.plot(timesteps,smoothed_var,label=label, color=color, linestyle=linestyle, linewidth=1.5)
                 #plt.plot(timesteps, df[var].to_numpy(), alpha=0.2, color=color)
-                plt.fill_between(timesteps, (smoothed_var-smoothed_std).to_numpy(), (smoothed_var+smoothed_std).to_numpy(), alpha=0.2, color=color) #, label='Smoothed Std Dev')
+                #plt.fill_between(timesteps, low, high, alpha=0.2, color=color) #, label='Smoothed Std Dev')
                 plt.xlabel('Timesteps',  fontsize=14)
-                plt.legend(loc='best', fontsize=14)
+                if var == legend_plot:
+                    plt.legend(loc='best', fontsize=20)
 
             elif xaxis == 'episodes':
                 plt.plot(smoothed_var,label=label, color=color, linestyle=linestyle, linewidth=1.5)
-                #plt.plot(df[var], alpha=0.2, color=color)
-                #plt.fill_between(df.index, smoothed_var-smoothed_std, smoothed_var+smoothed_std, alpha=0.2, color=color) #, label='Smoothed Std Dev')
+                plt.plot(df[var], alpha=0.2, color=color)
+                #plt.fill_between(df.index, low, high, alpha=0.2, color=color) #, label='Smoothed Std Dev')
                 plt.xlabel('Episodes',  fontsize=14)
                 if var == legend_plot:
                     plt.legend(loc='best', fontsize=20)
@@ -59,8 +78,8 @@ def plot_multiple_stats(df_list, label_list, var_list, var_labels_list, xaxis='e
 
 if __name__ == '__main__':  
     
-    window_size = 150 
-    n_timesteps = 1000000 # should be same as in run.py
+    window_size = 300 
+    n_timesteps = 3000000 # should be same as in run.py
     var_list = ['rewards', 'progresses', 'cross_track_errors', 'timesteps', 'durations', 'collisions', 'goals_reached']
     var_labels_list = ['Reward', 'Progress', 'CTE', 'Timesteps', 'Duration', 'Collisions', 'Goals reached']
 
@@ -93,7 +112,7 @@ if __name__ == '__main__':
                         var_labels_list=var_labels_list,
                         window_size=window_size, 
                         n_timesteps=n_timesteps, 
-                        xaxis='episodes',
+                        xaxis='timesteps',
                         path=save_path,
                         legend_plot='cross_track_errors') # legend_plot denotes which plot to have the legend in (upper right in report)
     '''
@@ -109,23 +128,23 @@ if __name__ == '__main__':
                         var_labels_list=var_labels_list,
                         window_size=window_size, 
                         n_timesteps=n_timesteps, 
-                        xaxis='episodes',
+                        xaxis='timesteps',
                         path=save_path,
                         legend_plot='cross_track_errors') # legend_plot denotes which plot to have the legend in (upper right in report)
-    '''
+    #'''
     #'''
     # BETA COMPARISON
     label_list = ['β = 0', 'β = 0.1',  'β = 0.5', 'β = 1.0', 'β = 1.5', 'β = 3.0']
-    filenames = ['shallow_locked_beta_0.0_stats', 'shallow_locked_beta_0.1_stats', 'shallow_locked_beta_0.5_stats', 'shallow_locked_stats',  'shallow_locked_beta_1.5_stats', 'shallow_locked_beta_3.0_stats']
-    df_list = [pd.read_csv(f'/home/eirikrb/Desktop/gym-auv-cnn/training_reports/data/betatest/{f}.csv') for f in filenames]
-    save_path = '/home/eirikrb/Desktop/gym-auv-cnn/training_reports/plots/beta_test'
+    filenames = ['shallow_locked_beta_0_3M_stats', 'shallow_locked_beta_0.1_3M_stats', 'shallow_locked_beta_0.5_3M_stats', 'shallow_locked_beta_1.0_3M_stats',  'shallow_locked_beta_1.5_3M_stats', 'shallow_locked_beta_3.0_3M_stats']
+    df_list = [pd.read_csv(f'/home/eirikrb/Desktop/gym-auv-cnn/training_reports/data/betatest_3M/{f}.csv') for f in filenames]
+    save_path = '/home/eirikrb/Desktop/gym-auv-cnn/training_reports/plots/beta_test_3M'
     plot_multiple_stats(df_list=df_list,
                         label_list=label_list, 
                         var_list=var_list,
                         var_labels_list=var_labels_list,
                         window_size=window_size, 
                         n_timesteps=n_timesteps, 
-                        xaxis='episodes',
+                        xaxis='timesteps',
                         path=save_path,
                         legend_plot='cross_track_errors') # legend_plot denotes which plot to have the legend in (upper right in report)
     #'''

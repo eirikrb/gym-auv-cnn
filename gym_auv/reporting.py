@@ -1308,23 +1308,34 @@ def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_
 
             if episode in failed_idx:
                 #plot a greeen X on the final position 
-                ax.plot(value_path_taken[-1, 0], value_path_taken[-1, 1], 'x', color='forestgreen', markersize=3, zorder=10, markeredgewidth=1)
+                ax.plot(value_path_taken[-1, 0], value_path_taken[-1, 1], 'x', color='red', markersize=3, zorder=10, markeredgewidth=1)
 
 
             episode += 1
         
         handles, labels = ax.get_legend_handles_labels()
-        green_cross = mlines.Line2D([], [], color='forestgreen', marker='x', linestyle='None', label='Collision', markeredgewidth=2)
+        green_cross = mlines.Line2D([], [], color='red', marker='x', linestyle='None', label='Collision', markeredgewidth=2)
         handles.append(green_cross)
         labels.append(green_cross.get_label())
         ax.legend(handles=handles, labels=labels, loc='best')
 
         if sm is not None:
             sm.set_array([])
-            cbar = plt.colorbar(sm, ax=ax, label='Cumulative Reward')
+            cbar = plt.colorbar(sm, ax=ax, fraction=0.02, pad=0.01,label='Cumulative Reward')
             cbar.ax.set_ylabel('Cumulative Reward', fontsize=10)  # Setting a smaller fontsize
+            cbar.ax.tick_params(labelsize=8)  # Smaller fontsize for tick labels
 
-
+        
+        plt.gca().set_facecolor('white')
+        # Set the border color and line width
+        plt.gca().spines['top'].set_color('black')
+        plt.gca().spines['bottom'].set_color('black')
+        plt.gca().spines['left'].set_color('black')
+        plt.gca().spines['right'].set_color('black')
+        plt.gca().spines['top'].set_linewidth(1)
+        plt.gca().spines['bottom'].set_linewidth(1)
+        plt.gca().spines['left'].set_linewidth(1)
+        plt.gca().spines['right'].set_linewidth(1)
 
         # # Create proxy artists for the custom legends
         # black_line = mlines.Line2D([], [], dashes=[3*dashmultiplier, 1*dashmultiplier], color='black', label='Path')
@@ -1349,8 +1360,8 @@ def plot_many_trajectories(report_dir, env, fig_dir, local=False, size=100, fig_
     if not local:
         ax.annotate("Goal", 
             xy=(path[0, -1], path[1, -1] + (axis_max - axis_min)/25),   
-            fontsize=11, ha="center", zorder=20, color='white', family='sans-serif',
-            bbox=dict(facecolor='#DF694E', edgecolor='black', alpha=0.75, boxstyle='round')
+            fontsize=11, ha="center", va="center", zorder=20, color='white',
+            bbox=dict(facecolor='#DF694E', edgecolor='black', alpha=0.75, boxstyle='round', pad=0.1)
         )
         '''
         ax.annotate("Start", 

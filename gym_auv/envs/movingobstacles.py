@@ -24,39 +24,27 @@ class MovingObstacles(BaseEnvironment):
             self._n_static_obst : Number of static obstacles
             self._rewarder_class : Rewarder used, e.g. PathRewarder, ColregRewarder
         """
-
         super().__init__(*args, **kwargs)
 
     def _generate(self):
+        #self.rng = np.random.RandomState(3) # ADDED, USE ONLY WHEN PLOTTING MULTIPLETRAJS, ELSE COMMENT OUT
+
         # Initializing path
-        self.rng = np.random.RandomState(1) # ADDED
-        rng_vessel_init = np.random.RandomState(np.random.randint(1000000)) # ADDED
         if not hasattr(self, '_n_waypoints'):
             self._n_waypoints = int(np.floor(4*self.rng.rand() + 2))
 
-        self.path = RandomCurveThroughOrigin(self.rng, self._n_waypoints, length=500)
+        self.path = RandomCurveThroughOrigin(self.rng, self._n_waypoints, length=300)
 
-        # Initializing vessel
+        # Initializing vessel (vessel params used to set other obstacles also)
         init_state = self.path(0)
         init_angle = self.path.get_direction(0)
-        init_state[0] += 200*(rng_vessel_init.rand()-0.5)
-        init_state[1] += 200*(rng_vessel_init.rand()-0.5)
-        init_angle = geom.princip(init_angle + 2*np.pi*(rng_vessel_init.rand()-0.5))
+        init_state[0] += 50*(self.rng.rand()-0.5)
+        init_state[1] += 50*(self.rng.rand()-0.5)
+        init_angle = geom.princip(init_angle + 2*np.pi*(self.rng.rand()-0.5))
         self.vessel = Vessel(self.config, np.hstack([init_state, init_angle]), width=self.config["vessel_width"])
         prog = 0
         self.path_prog_hist = np.array([prog])
         self.max_path_prog = prog
-
-        #USED TO BE:
-        #init_state = self.path(0)
-        #init_angle = self.path.get_direction(0)
-        #init_state[0] += 50*(self.rng.rand()-0.5)
-        #init_state[1] += 50*(self.rng.rand()-0.5)
-        #init_angle = geom.princip(init_angle + 2*np.pi*(self.rng.rand()-0.5))
-        #self.vessel = Vessel(self.config, np.hstack([init_state, init_angle]), width=self.config["vessel_width"])
-        #prog = 0
-        #self.path_prog_hist = np.array([prog])
-        #self.max_path_prog = prog
         
         self.obstacles = []
 
@@ -66,7 +54,8 @@ class MovingObstacles(BaseEnvironment):
 
             obst_position, obst_radius = helpers.generate_obstacle(self.rng, self.path, self.vessel, obst_radius_mean=10, displacement_dist_std=500)
             obst_direction = self.rng.rand()*2*np.pi
-            obst_speed = np.random.choice(vessel_speed_vals, p=vessel_speed_density)
+            obst_speed = self.rng.choice(vessel_speed_vals, p=vessel_speed_density)
+            #obst_speed = np.random.choice(vessel_speed_vals, p=vessel_speed_density)
 
             for i in range(10000):
                 other_vessel_trajectory.append((i, (
@@ -84,6 +73,14 @@ class MovingObstacles(BaseEnvironment):
             obstacle = CircularObstacle(*helpers.generate_obstacle(self.rng, self.path, self.vessel, displacement_dist_std=self.displacement_dist_std))
             self.obstacles.append(obstacle)
         
+        # Perturb initial vessel position and heading (ONLY USED WHEN PLOTTING MULTIPLE INIT POS IN PLOT MANY TRAJ TESTING, COMMENT OUT IF NOT)
+        '''
+        rng_vessel_init = np.random.RandomState(np.random.randint(1000000)) # ADDED
+        init_state[0] += 250*(rng_vessel_init.rand()-0.5)
+        init_state[1] += 250*(rng_vessel_init.rand()-0.5)
+        init_angle = geom.princip(init_angle + 2*np.pi*(rng_vessel_init.rand()-0.5)) # Overwrite with random heading for given vessel
+        self.vessel = Vessel(self.config, np.hstack([init_state, init_angle]), width=self.config["vessel_width"])
+        '''
         self._update()
 
 class MovingObstaclesNoRules(MovingObstacles):

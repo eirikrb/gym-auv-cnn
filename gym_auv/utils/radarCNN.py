@@ -166,11 +166,6 @@ class PerceptionNavigationExtractor(BaseFeaturesExtractor):
 
         # self.extractors contain nn.Modules that do all the processing.
         for key, extractor in self.extractors.items():
-            print(f'key: {key}')
-            print('observations[key]:')
-            print(observations[key].shape)
-            print('extractor(observations[key]):')
-            print(extractor(observations[key]).shape)
             encoded_tensor_list.append(extractor(observations[key]))
         # Return a (B, self._features_dim) PyTorch tensor, where B is batch dimension.
         return th.cat(encoded_tensor_list, dim=1)
